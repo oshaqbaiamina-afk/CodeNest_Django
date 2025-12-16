@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% if user.is_authenticated %}
+    <meta name="user-email" content="{{ user.email }}">
+    {% endif %}
+
+    <title>CodeNest - Мұғалім панелі</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            background: 
+                radial-gradient(ellipse at top left, rgba(102, 126, 234, 0.4), transparent 50%),
+                radial-gradient(ellipse at top right, rgba(240, 147, 251, 0.4), transparent 50%),
+                radial-gradient(ellipse at bottom left, rgba(56, 239, 125, 0.4), transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(79, 172, 254, 0.4), transparent 50%),
+                linear-gradient(135deg, #667eea 0%, #764ba2 20%, #f093fb 40%, #4facfe 60%, #00f2fe 80%, #667eea 100%);
+            background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 400% 400%;
+            animation: gradientShift 20s ease infinite;
+            min-height: 100vh;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 50%; }
+            50% { background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 100% 50%; }
+            100% { background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 50%; }
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            padding: 1.2rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 900;
+            color: white;
+            text-shadow: 0 2px 10px rgba(102, 126, 234, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .logo::before {
+            content: '</>';
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .profile-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            color: white;
+            padding: 0.8rem 1.8rem;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+        }
+
+        .profile-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .logout-btn {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
+        }
+
+        .logout-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(245, 87, 108, 0.6);
+        }
+
+        .table-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2rem;
+            overflow-x: auto;
+            margin-bottom: 2rem;
+            max-width: 100%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 700;
+            font-size: 1.1rem;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            white-space: nowrap;
+        }
+
+        th:nth-child(1),
+        th:nth-child(2),
+        th:nth-child(3),
+        td:nth-child(1),
+        td:nth-child(2),
+        td:nth-child(3) {
+            position: sticky;
+            background: rgba(255, 255, 255, 0.95);
+            z-index: 5;
+        }
+
+        th:nth-child(1),
+        td:nth-child(1) {
+            left: 0;
+            min-width: 60px;
+        }
+
+        th:nth-child(2),
+        td:nth-child(2) {
+            left: 60px;
+            min-width: 150px;
+        }
+
+        th:nth-child(3),
+        td:nth-child(3) {
+            left: 210px;
+            min-width: 200px;
+        }
+
+        th:nth-child(1),
+        th:nth-child(2),
+        th:nth-child(3) {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .lesson-id-header {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            padding: 1rem;
+            text-align: center;
+            font-weight: 700;
+            color: white;
+            min-width: 100px;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        td input.grade-input {
+            width: 80px;
+            padding: 0.5rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1rem;
+            background: #f5f5f5;
+        }
+
+        td input.grade-input:not(:disabled) {
+            background: #fff;
+            border-color: #667eea;
+        }
+
+        td input.grade-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        .table-container::-webkit-scrollbar {
+            height: 12px;
+        }
+
+        .table-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 10px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #764ba2, #667eea);
+        }
+
+        .main-container {
+            display: flex;
+            max-width: 1600px;
+            margin: 0 auto;
+            min-height: calc(100vh - 80px);
+        }
+
+        .sidebar {
+            width: 280px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 2rem 1rem;
+            position: sticky;
+            top: 80px;
+            height: calc(100vh - 80px);
+            overflow-y: auto;
+        }
+
+        .sidebar-title {
+            font-size: 1.8rem;
+            color: white;
+            font-weight: 800;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .menu-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            color: white;
+            padding: 1.2rem 1.5rem;
+            margin: 0.8rem 0;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .menu-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
+        }
+
+        .menu-btn.active {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            box-shadow: 0 5px 20px rgba(56, 239, 125, 0.4);
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 3rem;
+            overflow-y: auto;
+            height: calc(100vh - 80px);
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-title {
+            font-size: 3rem;
+            color: white;
+            font-weight: 900;
+            margin-bottom: 2rem;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .btn {
+            padding: 1rem 2.5rem;
+            border: none;
+            border-radius: 25px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            color: white;
+        }
+
+        .btn-edit {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 0.6rem 1.2rem;
+            font-size: 0.9rem;
+        }
+
+        .list-item {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 15px;
+            padding: 1.5rem 9rem 1.5rem 2rem;
+            margin-bottom: 1rem;
+            display: grid;
+            grid-template-columns: 80px 1fr 1fr 120px;
+            gap: 2rem;
+            align-items: center;
+            position: relative;
+        }
+
+        .delete-lesson-btn {
+            white-space: nowrap;
+            box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
+        }
+
+        .delete-lesson-btn:hover {
+            transform: translateY(-50%) scale(1.05);
+            box-shadow: 0 6px 20px rgba(245, 87, 108, 0.6);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .form-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 3rem;
+            max-width: 800px;
+        }
+
+        .form-group {
+            margin-bottom: 2rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.8rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-input[readonly] {
+            background: #f5f5f5;
+            color: #999;
+        }
+
+        textarea.form-input {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .lesson-form {
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .lesson-form:last-child {
+            border-bottom: none;
+        }
+
+        .list-item-field {
+            font-size: 1.1rem;
+            color: #333;
+        }
+
+        .list-item-label {
+            font-weight: 600;
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 0.3rem;
+        }
+
+        @media (max-width: 968px) {
+            .main-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                position: static;
+                height: auto;
+            }
+
+            .nav-buttons {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+
+            .profile-btn {
+                padding: 0.6rem 1.2rem;
+                font-size: 0.85rem;
+            }
+
+            .list-item {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            th:nth-child(1),
+            th:nth-child(2),
+            th:nth-child(3),
+            td:nth-child(1),
+            td:nth-child(2),
+            td:nth-child(3) {
+                position: static;
+            }
+            
+            .table-container {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">CodeNest</div>
+        
+        <div class="nav-buttons">
+            <button class="profile-btn" onclick="window.location.href='{% url 'courses' %}'">
+                🧑‍🏫 {{ user.full_name|default:user.email|truncatechars:20 }}
+            </button>
+            
+            <button class="profile-btn logout-btn" onclick="logout('/')">
+                🚪 Шығу
+            </button>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <aside class="sidebar">
+            <h2 class="sidebar-title">Мұғалім панелі</h2>
+            <button class="menu-btn active" data-section="journal">
+                📊 Журнал
+            </button>
+            <button class="menu-btn" data-section="add-lesson">
+                ➕ Сабақ қосу
+            </button>
+            <button class="menu-btn" data-section="lessons">
+                📚 Сабақтар
+            </button>
+        </aside>
+
+        <main class="content-area">
+            <!-- Журнал -->
+            <section class="section active" id="journal">
+                <h1 class="section-title">Бағалар журналы</h1>
+                <div class="table-container">
+                    <table id="journalTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Аты</th>
+                                <th>Email</th>
+                                <th class="lesson-id-header" data-lesson="1">Сабақ #1</th>
+                                <th class="lesson-id-header" data-lesson="2">Сабақ #2</th>
+                                <th class="lesson-id-header" data-lesson="3">Сабақ #3</th>
+                            </tr>
+                        </thead>
+                        <tbody id="journalBody">
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 2rem; color: #666;">
+                                    ⏳ Журналды жүктеу...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-edit" onclick="enableEdit()">Өзгерту</button>
+                    <button class="btn btn-save" onclick="saveGrades()">Сақтау</button>
+                </div>
+            </section>
+
+            <!-- Сабақ қосу -->
+            <section class="section" id="add-lesson">
+                <h1 class="section-title">Сабақ қосу</h1>
+                
+                <div id="lessonFormsContainer">
+                    <!-- Формалар динамикалық түрде қосылады -->
+                </div>
+                
+                <button class="btn btn-add" onclick="addNewLessonForm()" style="margin-top: 1rem;">
+                    ➕ Сабақ қосу
+                </button>
+            </section>
+
+            <!-- Сабақтар -->
+            <section class="section" id="lessons">
+                <h1 class="section-title">Тағайындалған сабақтар</h1>
+                <div id="assignedLessons">
+                    <div style="text-align: center; padding: 2rem; color: white; font-size: 1.2rem;">
+                        ⏳ Сабақтарды жүктеу...
+                    </div>
+                </div>
+                <button class="btn btn-add" onclick="switchSection('add-lesson')" style="margin-top: 2rem;">➕ Сабақ қосу</button>
+            </section>
+        </main>
+    </div>
+
+    {% load static %}
+    <script src="{% static 'scripts_teacher.js' %}" defer></script>
+</body>
+</html>

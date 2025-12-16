@@ -1,0 +1,1434 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeNest - Әкімші панелі</title>
+
+    {% if user.is_authenticated %}
+    <meta name="user-email" content="{{ user.email }}">
+    <meta name="user-role" content="{{ user.role }}">
+    <meta name="user-name" content="{{ user.full_name }}">
+    {% endif %}
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            background:
+                radial-gradient(ellipse at top left, rgba(102, 126, 234, 0.4), transparent 50%),
+                radial-gradient(ellipse at top right, rgba(240, 147, 251, 0.4), transparent 50%),
+                radial-gradient(ellipse at bottom left, rgba(56, 239, 125, 0.4), transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(79, 172, 254, 0.4), transparent 50%),
+                linear-gradient(135deg, #667eea 0%, #764ba2 20%, #f093fb 40%, #4facfe 60%, #00f2fe 80%, #667eea 100%);
+            background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 400% 400%;
+            animation: gradientShift 20s ease infinite;
+            color: #333;
+            min-height: 100vh;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 50%; }
+            50% { background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 100% 50%; }
+            100% { background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 50%; }
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            padding: 1.2rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 900;
+            color: white;
+            text-shadow: 0 2px 10px rgba(102, 126, 234, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo::before {
+            content: '</>';
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .admin-badge {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-left: 1rem;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 0.8rem 1.8rem;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: white;
+            color: #667eea;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .stat-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-value {
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: white;
+            text-shadow: 0 3px 15px rgba(0, 0, 0, 0.6), 0 0 25px rgba(0, 0, 0, 0.4);
+            letter-spacing: 1px;
+        }
+
+        .stat-label {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+            letter-spacing: 0.3px;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border-radius: 25px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 2.8rem;
+            color: white;
+            font-weight: 900;
+            text-shadow: 0 3px 15px rgba(0, 0, 0, 0.6), 0 0 25px rgba(0, 0, 0, 0.4);
+            letter-spacing: 0.5px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid transparent;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 15px;
+            font-weight: 700;
+            font-size: 1.15rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-color: white;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 15px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+        }
+
+        .btn-sm {
+            padding: 0.6rem 1.2rem;
+            font-size: 0.9rem;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 600;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 1rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 1.2rem;
+            text-align: left;
+            font-weight: 800;
+            font-size: 1.2rem;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+            letter-spacing: 0.3px;
+        }
+
+        td {
+            padding: 1.2rem;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.4rem 0.8rem;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            color: white;
+        }
+
+        .badge-warning {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+        }
+
+        .badge-info {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .progress-bar-container {
+            background: rgba(255, 255, 255, 0.2);
+            height: 10px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .export-btn {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 15px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .export-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(79, 172, 254, 0.5);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .error-message {
+            background: rgba(245, 87, 108, 0.2);
+            border: 2px solid #f5576c;
+            color: white;
+            padding: 1rem;
+            border-radius: 15px;
+            margin: 1rem 0;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .form-select {
+            padding: 0.8rem 1.2rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .form-select option {
+            background: #667eea;
+            color: white;
+        }
+
+        /* Модальды терезе */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.95), rgba(118, 75, 162, 0.95));
+            padding: 2.5rem;
+            border-radius: 25px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .modal-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: white;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .close-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            font-size: 1.5rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: white;
+            color: #667eea;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: white;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: white;
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div style="display: flex; align-items: center;">
+            <div class="logo">CodeNest</div>
+            <span class="admin-badge">👑 {{ user.get_role_display|upper }}</span>
+        </div>
+        <button class="logout-btn" onclick="handleLogout()">🚪 Шығу</button>
+    </nav>
+
+    <div class="container">
+        <div class="dashboard-grid">
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-value" id="totalStudents">-</div>
+                <div class="stat-label">Барлық оқушылар</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">👨‍🏫</div>
+                <div class="stat-value" id="totalTeachers">-</div>
+                <div class="stat-label">Мұғалімдер</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📚</div>
+                <div class="stat-value" id="totalCourses">4</div>
+                <div class="stat-label">Белсенді курстар</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">⭐</div>
+                <div class="stat-value" id="avgScore">-</div>
+                <div class="stat-label">Орташа балл</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">Жүйені басқару</h2>
+                <button class="export-btn" onclick="exportData()">📥 Деректерді экспорттау</button>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('students')">👥 Оқушылар</button>
+                <button class="tab-btn" onclick="switchTab('teachers')">👨‍🏫 Мұғалімдер</button>
+                <button class="tab-btn" onclick="switchTab('grades')">🎯 Бағалар</button>
+                <button class="tab-btn" onclick="switchTab('analytics')">📊 Аналитика</button>
+            </div>
+
+            <div id="students-tab" class="tab-content active">
+                <div class="search-bar">
+                    <input type="text" class="search-input" id="studentSearch" placeholder="🔍 Аты, email немесе ID бойынша іздеу..." onkeyup="searchStudents()">
+                    <button class="btn btn-success" onclick="openAddStudentModal()">➕ Оқушы қосу</button>
+                </div>
+
+                <div class="filter-bar">
+                    <select class="form-select" id="statusFilter" onchange="filterStudents()">
+                        <option value="">Барлық мәртебелер</option>
+                        <option value="true">Белсенді</option>
+                        <option value="false">Белсенді емес</option>
+                    </select>
+                </div>
+
+                <div class="table-container">
+                    <table id="studentsTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Аты</th>
+                                <th>Email</th>
+                                <th>Тіркелген күні</th>
+                                <th>Прогресс</th>
+                                <th>Мәртебе</th>
+                                <th>Әрекеттер</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentsTableBody">
+                            <tr>
+                                <td colspan="7" class="loading">⏳ Деректер жүктелуде...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="teachers-tab" class="tab-content">
+                <div class="search-bar">
+                    <input type="text" class="search-input" id="teacherSearch" placeholder="🔍 Мұғалімдерді іздеу..." onkeyup="searchTeachers()">
+                    <button class="btn btn-success" onclick="openAddTeacherModal()">➕ Мұғалім қосу</button>
+                </div>
+
+                <div class="table-container">
+                    <table id="teachersTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Аты</th>
+                                <th>Email</th>
+                                <th>Курс</th>
+                                <th>Оқушы саны</th>
+                                <th>Мәртебе</th>
+                                <th>Әрекеттер</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teachersTableBody">
+                            <tr>
+                                <td colspan="7" class="loading">⏳ Деректер жүктелуде...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="grades-tab" class="tab-content">
+                <div class="search-bar">
+                    <input type="text" class="search-input" id="gradeSearch" placeholder="🔍 Бағаларды іздеу..." onkeyup="searchGrades()">
+                    <select class="form-select" style="width: auto;" id="gradeCourseFilter" onchange="filterGrades()">
+                        <option value="">Барлық курстар</option>
+                        <option value="Web Development">Web Development</option>
+                        <option value="Python Programming">Python Programming</option>
+                        <option value="JavaScript">JavaScript</option>
+                        <option value="SQL Database">SQL Database</option>
+                    </select>
+                </div>
+
+                <div class="table-container">
+                    <table id="gradesTable">
+                        <thead>
+                            <tr>
+                                <th>Оқушы</th>
+                                <th>Мұғалім</th>
+                                <th>Курс</th>
+                                <th>Сабақ</th>
+                                <th>Баға</th>
+                                <th>Күні</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gradesTableBody">
+                            <tr>
+                                <td colspan="6" class="loading">⏳ Деректер жүктелуде...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="analytics-tab" class="tab-content">
+                <div class="dashboard-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">⏱️</div>
+                        <div class="stat-value" id="avgTimeHours">-</div>
+                        <div class="stat-label">Орташа оқу уақыты</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🔥</div>
+                        <div class="stat-value" id="completionRate">-</div>
+                        <div class="stat-label">Аяқтау пайызы</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💯</div>
+                        <div class="stat-value" id="perfectScores">-</div>
+                        <div class="stat-label">Тамаша нәтижелер</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📝</div>
+                        <div class="stat-value" id="totalLessons">-</div>
+                        <div class="stat-label">Барлық сабақтар</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="studentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="studentModalTitle">Оқушы қосу</h3>
+                <button class="close-btn" onclick="closeStudentModal()">×</button>
+            </div>
+            <form id="studentForm">
+                <input type="hidden" id="studentId">
+                <div class="form-group">
+                    <label class="form-label">Аты</label>
+                    <input type="text" class="form-input" id="studentName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" id="studentEmail" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Құпия сөз (өңдеу үшін бос қалдырыңыз)</label>
+                    <input type="password" class="form-input" id="studentPassword">
+                </div>
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="submit" class="btn btn-success" style="flex: 1;">Сақтау</button>
+                    <button type="button" class="btn" onclick="closeStudentModal()" style="flex: 1;">Болдырмау</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="teacherModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="teacherModalTitle">Мұғалім қосу</h3>
+                <button class="close-btn" onclick="closeTeacherModal()">×</button>
+            </div>
+            <form id="teacherForm">
+                <input type="hidden" id="teacherId">
+                <div class="form-group">
+                    <label class="form-label">Аты</label>
+                    <input type="text" class="form-input" id="teacherName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" id="teacherEmail" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Құпия сөз</label>
+                    <input type="password" class="form-input" id="teacherPassword">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Курс</label>
+                    <select class="form-select" id="teacherCourse" style="width: 100%;" required>
+                        <option value="">Курсты таңдаңыз</option>
+                        <option value="1">Web Development</option>
+                        <option value="2">Python Programming</option>
+                        <option value="3">JavaScript</option>
+                        <option value="4">SQL Database</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="submit" class="btn btn-success" style="flex: 1;">Сақтау</button>
+                    <button type="button" class="btn" onclick="closeTeacherModal()" style="flex: 1;">Болдырмау</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // CSRF Token
+        function getCSRFToken() {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    let cookie = cookies[i].trim();
+                    if (cookie.startsWith('csrftoken=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(10));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        let allStudents = [];
+        let allTeachers = [];
+        let allGrades = [];
+        let studentsDataCache = {};
+
+        // Загрузка данных при открытии страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStudents();
+            loadTeachers();
+            loadGrades();
+            calculateAnalytics();
+        });
+
+        // Переключение табов
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(tabName + '-tab').classList.add('active');
+
+            if (tabName === 'analytics') {
+                calculateAnalytics();
+            } else if (tabName === 'teachers') {
+                loadTeachers();
+            } else if (tabName === 'grades') {
+                loadGrades();
+            }
+        }
+
+        // Загрузка списка студентов
+        async function loadStudents() {
+            try {
+                const response = await fetch('/api/admin/students/', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load students');
+                }
+
+                const data = await response.json();
+                allStudents = data.students;
+
+                // Загружаем данные прогресса из localStorage для каждого студента
+                allStudents.forEach(student => {
+                    studentsDataCache[student.email] = getStudentProgress(student.email);
+                });
+
+                renderStudents(allStudents);
+                updateStatistics();
+
+            } catch (error) {
+                console.error('Error loading students:', error);
+                document.getElementById('studentsTableBody').innerHTML = `
+                    <tr><td colspan="7" class="error-message">❌ Деректерді жүктеу қатесі: ${error.message}</td></tr>
+                `;
+            }
+        }
+
+        // Получение прогресса студента из localStorage
+        function getStudentProgress(email) {
+            const courses = ['course_webdep', 'course_python', 'course_js', 'course_sql'];
+            let totalProgress = 0;
+            let totalTime = 0;
+            let completedCourses = 0;
+            let perfectScores = 0;
+            let totalScores = 0;
+            let scoreCount = 0;
+
+            courses.forEach(courseKey => {
+                const userKey = `${courseKey}_${email}`;
+                const data = localStorage.getItem(userKey);
+
+                if (data) {
+                    try {
+                        const courseData = JSON.parse(data);
+
+                        if (courseData.total_lessons && courseData.total_lessons > 0) {
+                            const progress = (courseData.completed_lessons / courseData.total_lessons) * 100;
+                            totalProgress += progress;
+
+                            if (progress === 100) completedCourses++;
+                        }
+
+                        if (courseData.time_seconds) {
+                            totalTime += courseData.time_seconds;
+                        }
+
+                        if (courseData.test_scores) {
+                            courseData.test_scores.forEach(test => {
+                                if (test.percentage !== undefined) {
+                                    totalScores += test.percentage;
+                                    scoreCount++;
+                                    if (test.percentage === 100) perfectScores++;
+                                }
+                            });
+                        }
+                    } catch (e) {
+                        console.error(`Error parsing data for ${userKey}:`, e);
+                    }
+                }
+            });
+
+            const avgProgress = Math.round(totalProgress / courses.length);
+            const avgScore = scoreCount > 0 ? Math.round(totalScores / scoreCount) : 0;
+
+            return {
+                avgProgress,
+                avgScore,
+                totalTime,
+                completedCourses,
+                perfectScores,
+                scoreCount
+            };
+        }
+
+        // Отрисовка таблицы студентов
+        function renderStudents(students) {
+            const tbody = document.getElementById('studentsTableBody');
+
+            if (students.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: white;">Оқушылар табылмады</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = '';
+
+            students.forEach(student => {
+                const progress = studentsDataCache[student.email];
+                const tr = document.createElement('tr');
+
+                tr.innerHTML = `
+                    <td>#${student.id}</td>
+                    <td><strong>${student.name}</strong></td>
+                    <td>${student.email}</td>
+                    <td>${student.date_joined}</td>
+                    <td>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar-fill" style="width: ${progress.avgProgress}%"></div>
+                        </div>
+                        <small style="color: rgba(255,255,255,0.8)">${progress.avgProgress}%</small>
+                    </td>
+                    <td>
+                        <span class="badge badge-${student.is_active ? 'success' : 'warning'}">
+                            ${student.is_active ? 'Белсенді' : 'Белсенді емес'}
+                        </span>
+                    </td>
+                    <td class="action-buttons">
+                        <button class="btn btn-sm" onclick="viewStudent(${student.id}, '${student.email}')">👁️</button>
+                        <button class="btn btn-sm ${student.is_active ? 'btn-danger' : 'btn-success'}"
+                                onclick="toggleStudentStatus(${student.id}, ${!student.is_active})">
+                            ${student.is_active ? '🚫' : '✅'}
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteStudent(${student.id})">🗑️</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Загрузка оценок
+        async function loadGrades() {
+            try {
+                const response = await fetch('/api/admin/grades/', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load grades');
+                }
+
+                const data = await response.json();
+                allGrades = data.grades || [];
+
+                renderGrades(allGrades);
+
+            } catch (error) {
+                console.error('Error loading grades:', error);
+                document.getElementById('gradesTableBody').innerHTML = `
+                    <tr><td colspan="6" class="error-message">❌ Деректерді жүктеу қатесі: ${error.message}</td></tr>
+                `;
+            }
+        }
+
+        // Отрисовка таблицы оценок
+        function renderGrades(grades) {
+            const tbody = document.getElementById('gradesTableBody');
+
+            if (grades.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: white;">Бағалар табылмады</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = grades.map(grade => `
+                <tr>
+                    <td><strong>${grade.student_name}</strong></td>
+                    <td>${grade.teacher_name}</td>
+                    <td>${grade.course_name}</td>
+                    <td>${grade.lesson_title}</td>
+                    <td>
+                        <span class="badge badge-${grade.grade >= 90 ? 'success' : grade.grade >= 70 ? 'info' : 'warning'}">
+                            ${grade.grade}%
+                        </span>
+                    </td>
+                    <td>${grade.graded_date}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Поиск оценок
+        function searchGrades() {
+            const query = document.getElementById('gradeSearch').value.toLowerCase();
+
+            const filtered = allGrades.filter(g =>
+                g.student_name.toLowerCase().includes(query) ||
+                g.teacher_name.toLowerCase().includes(query) ||
+                g.lesson_title.toLowerCase().includes(query)
+            );
+
+            renderGrades(filtered);
+        }
+
+        // Фильтр оценок по курсу
+        function filterGrades() {
+            const courseFilter = document.getElementById('gradeCourseFilter').value;
+
+            let filtered = allGrades;
+
+            if (courseFilter !== '') {
+                filtered = filtered.filter(g => g.course_name === courseFilter);
+            }
+
+            renderGrades(filtered);
+        }
+
+        // Загрузка учителей
+        async function loadTeachers() {
+            try {
+                const response = await fetch('/api/admin/teachers/', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load teachers');
+                }
+
+                const data = await response.json();
+                allTeachers = data.teachers || [];
+
+                renderTeachers(allTeachers);
+                updateTeacherStats();
+
+            } catch (error) {
+                console.error('Error loading teachers:', error);
+                document.getElementById('teachersTableBody').innerHTML = `
+                    <tr><td colspan="7" class="error-message">❌ Деректерді жүктеу қатесі: ${error.message}</td></tr>
+                `;
+            }
+        }
+
+        // Отрисовка таблицы учителей
+        function renderTeachers(teachers) {
+            const tbody = document.getElementById('teachersTableBody');
+
+            if (teachers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: white;">Мұғалімдер табылмады</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = teachers.map(teacher => `
+                <tr>
+                    <td>#${teacher.id}</td>
+                    <td><strong>${teacher.name}</strong></td>
+                    <td>${teacher.email}</td>
+                    <td>${teacher.course_name || 'Тағайындалмаған'}</td>
+                    <td>${teacher.students_count || 0}</td>
+                    <td>
+                        <span class="badge badge-${teacher.is_active ? 'success' : 'warning'}">
+                            ${teacher.is_active ? 'Белсенді' : 'Белсенді емес'}
+                        </span>
+                    </td>
+                    <td class="action-buttons">
+                        <button class="btn btn-sm" onclick="viewTeacher(${teacher.id})">👁️</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteTeacher(${teacher.id})">🗑️</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Обновление статистики
+        function updateStatistics() {
+            document.getElementById('totalStudents').textContent = allStudents.length;
+
+            let totalScore = 0;
+            let scoreCount = 0;
+
+            allStudents.forEach(student => {
+                const progress = studentsDataCache[student.email];
+                if (progress.avgScore > 0) {
+                    totalScore += progress.avgScore;
+                    scoreCount++;
+                }
+            });
+
+            const avgScore = scoreCount > 0 ? Math.round(totalScore / scoreCount) : 0;
+            document.getElementById('avgScore').textContent = avgScore + '%';
+        }
+
+        // Обновление статистики учителей
+        function updateTeacherStats() {
+            document.getElementById('totalTeachers').textContent = allTeachers.length;
+        }
+
+        // Подсчет аналитики
+        function calculateAnalytics() {
+            let totalTime = 0;
+            let completedCount = 0;
+            let perfectCount = 0;
+            let studentCount = 0;
+
+            allStudents.forEach(student => {
+                const progress = studentsDataCache[student.email];
+                totalTime += progress.totalTime;
+                completedCount += progress.completedCourses;
+                perfectCount += progress.perfectScores;
+                if (progress.avgProgress > 0) studentCount++;
+            });
+
+            const avgTimeHours = studentCount > 0 ? (totalTime / studentCount / 3600).toFixed(1) : 0;
+            const completionRate = studentCount > 0 ? Math.round((completedCount / (studentCount * 4)) * 100) : 0;
+
+            document.getElementById('avgTimeHours').textContent = avgTimeHours + ' сағ';
+            document.getElementById('completionRate').textContent = completionRate + '%';
+            document.getElementById('perfectScores').textContent = perfectCount;
+
+            // Подсчет уроков
+            const totalLessons = allTeachers.reduce((sum, t) => sum + (t.lessons_count || 0), 0);
+            document.getElementById('totalLessons').textContent = totalLessons;
+        }
+
+        // Поиск студентов
+        function searchStudents() {
+            const query = document.getElementById('studentSearch').value.toLowerCase();
+
+            const filtered = allStudents.filter(s =>
+                s.name.toLowerCase().includes(query) ||
+                s.email.toLowerCase().includes(query) ||
+                s.id.toString().includes(query)
+            );
+
+            renderStudents(filtered);
+        }
+
+        // Поиск учителей
+        function searchTeachers() {
+            const query = document.getElementById('teacherSearch').value.toLowerCase();
+
+            const filtered = allTeachers.filter(t =>
+                t.name.toLowerCase().includes(query) ||
+                t.email.toLowerCase().includes(query) ||
+                t.id.toString().includes(query)
+            );
+
+            renderTeachers(filtered);
+        }
+
+        // Фильтр студентов
+        function filterStudents() {
+            const statusFilter = document.getElementById('statusFilter').value;
+
+            let filtered = allStudents;
+
+            if (statusFilter !== '') {
+                const isActive = statusFilter === 'true';
+                filtered = filtered.filter(s => s.is_active === isActive);
+            }
+
+            renderStudents(filtered);
+        }
+
+        // Просмотр данных студента
+        function viewStudent(id, email) {
+            const student = allStudents.find(s => s.id === id);
+            const progress = studentsDataCache[email];
+
+            let details = `Аты: ${student.name}\n`;
+            details += `Email: ${student.email}\n`;
+            details += `Тіркелген күні: ${student.date_joined}\n`;
+            details += `Жалпы прогресс: ${progress.avgProgress}%\n`;
+            details += `Орташа балл: ${progress.avgScore}%\n`;
+            details += `Аяқталған курстар: ${progress.completedCourses}\n`;
+            details += `Оқу уақыты: ${(progress.totalTime / 3600).toFixed(1)} сағат\n`;
+            details += `Тамаша тесттер: ${progress.perfectScores}\n`;
+
+            alert(details);
+        }
+
+        // Изменение статуса студента
+        async function toggleStudentStatus(id, newStatus) {
+            try {
+                const response = await fetch('/api/admin/students/status/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    body: JSON.stringify({
+                        student_id: id,
+                        is_active: newStatus
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('✅ ' + data.message);
+                    loadStudents();
+                } else {
+                    alert('❌ ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Мәртебені өзгерту кезінде қате');
+            }
+        }
+
+        // Удаление студента
+        async function deleteStudent(id) {
+            if (!confirm('Бұл оқушыны жойғыңыз келетініне сенімдісіз бе? Бұл әрекетті болдырмау мүмкін емес.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admin/students/delete/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    body: JSON.stringify({
+                        student_id: id
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('✅ ' + data.message);
+                    loadStudents();
+                } else {
+                    alert('❌ ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Оқушыны жою кезінде қате');
+            }
+        }
+
+        // Модальные окна
+        function openAddStudentModal() {
+            document.getElementById('studentModalTitle').textContent = 'Оқушы қосу';
+            document.getElementById('studentForm').reset();
+            document.getElementById('studentId').value = '';
+            document.getElementById('studentModal').classList.add('active');
+        }
+
+        function closeStudentModal() {
+            document.getElementById('studentModal').classList.remove('active');
+        }
+
+        function openAddTeacherModal() {
+            document.getElementById('teacherModalTitle').textContent = 'Мұғалім қосу';
+            document.getElementById('teacherForm').reset();
+            document.getElementById('teacherId').value = '';
+            document.getElementById('teacherModal').classList.add('active');
+        }
+
+        function closeTeacherModal() {
+            document.getElementById('teacherModal').classList.remove('active');
+        }
+
+        function viewTeacher(id) {
+            const teacher = allTeachers.find(t => t.id === id);
+            if (!teacher) return;
+
+            let details = `Аты: ${teacher.name}\n`;
+            details += `Email: ${teacher.email}\n`;
+            details += `Курс: ${teacher.course_name || 'Тағайындалмаған'}\n`;
+            details += `Оқушы саны: ${teacher.students_count || 0}\n`;
+            details += `Сабақтар: ${teacher.lessons_count || 0}\n`;
+
+            alert(details);
+        }
+
+        async function deleteTeacher(id) {
+            if (!confirm('Бұл мұғалімді жойғыңыз келетініне сенімдісіз бе? Барлық сабақтары мен бағалары да жойылады.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admin/teachers/delete/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    body: JSON.stringify({
+                        teacher_id: id
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('✅ ' + data.message);
+                    loadTeachers();
+                    updateTeacherStats();
+                } else {
+                    alert('❌ ' + (data.error || data.message));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Мұғалімді жою кезінде қате');
+            }
+        }
+
+        // Handle Student Form Submit
+        document.getElementById('studentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const id = document.getElementById('studentId').value;
+            const name = document.getElementById('studentName').value;
+            const email = document.getElementById('studentEmail').value;
+            const password = document.getElementById('studentPassword').value;
+
+            // Валидация
+            if (!name || !email) {
+                alert('❌ Барлық міндетті өрістерді толтырыңыз');
+                return;
+            }
+
+            if (!id && !password) {
+                alert('❌ Жаңа оқушы үшін құпия сөзді енгізіңіз');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admin/students/create/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    body: JSON.stringify({
+                        full_name: name,
+                        email: email,
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('✅ ' + data.message);
+                    closeStudentModal();
+                    loadStudents();
+                } else {
+                    alert('❌ ' + (data.message || data.error));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Оқушыны жасау кезінде қате');
+            }
+        });
+
+        // Handle Teacher Form Submit
+        document.getElementById('teacherForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const name = document.getElementById('teacherName').value;
+            const email = document.getElementById('teacherEmail').value;
+            const password = document.getElementById('teacherPassword').value;
+            const courseId = document.getElementById('teacherCourse').value;
+
+            // Валидация
+            if (!name || !email || !password || !courseId) {
+                alert('❌ Барлық міндетті өрістерді толтырыңыз');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admin/teachers/create/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    body: JSON.stringify({
+                        full_name: name,
+                        email: email,
+                        password: password,
+                        course_id: parseInt(courseId)
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('✅ ' + data.message);
+                    closeTeacherModal();
+                    loadTeachers();
+                    updateTeacherStats();
+                } else {
+                    alert('❌ ' + (data.message || data.error));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Мұғалімді жасау кезінде қате');
+            }
+        });
+
+        // Экспорт данных
+        async function exportData() {
+            try {
+                const data = {
+                    students: allStudents,
+                    teachers: allTeachers,
+                    exportDate: new Date().toISOString(),
+                    stats: {
+                        totalStudents: allStudents.length,
+                        totalTeachers: allTeachers.length,
+                        totalCourses: 4
+                    }
+                };
+
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `codenest-data-${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+
+                alert('📥 Деректер сәтті экспортталды!');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Деректерді экспорттау кезінде қате');
+            }
+        }
+
+        // Выход
+        async function handleLogout() {
+            if (!confirm('Шыққыңыз келетініне сенімдісіз бе?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/logout/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCSRFToken(),
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    window.location.href = '/';
+                }
+            } catch (error) {
+                console.error('Logout error:', error);
+                alert('Шығу кезіндегі қате');
+            }
+        }
+    </script>
+</body>
+</html>

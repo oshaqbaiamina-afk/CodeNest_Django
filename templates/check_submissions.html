@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeNest - Тапсырмаларды тексеру</title>
+
+    {% if user.is_authenticated %}
+    <meta name="user-email" content="{{ user.email }}">
+    {% endif %}
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            background:
+                radial-gradient(ellipse at top left, rgba(102, 126, 234, 0.4), transparent 50%),
+                radial-gradient(ellipse at top right, rgba(240, 147, 251, 0.4), transparent 50%),
+                radial-gradient(ellipse at bottom left, rgba(56, 239, 125, 0.4), transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(79, 172, 254, 0.4), transparent 50%),
+                linear-gradient(135deg, #667eea 0%, #764ba2 20%, #f093fb 40%, #4facfe 60%, #00f2fe 80%, #667eea 100%);
+            background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 400% 400%;
+            animation: gradientShift 20s ease infinite;
+            min-height: 100vh;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 50%; }
+            50% { background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 100% 50%; }
+            100% { background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 50%; }
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            padding: 1.2rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 900;
+            color: white;
+            text-shadow: 0 2px 10px rgba(102, 126, 234, 0.5);
+            cursor: pointer;
+        }
+
+        .logo::before {
+            content: '</>';
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-right: 0.5rem;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 0.8rem 1.8rem;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 100px auto 2rem;
+            padding: 0 5%;
+        }
+
+        .page-title {
+            font-size: 3rem;
+            color: white;
+            font-weight: 900;
+            margin-bottom: 2rem;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .submissions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .submission-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .submission-header {
+            padding: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submission-header:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .submission-info {
+            flex: 1;
+        }
+
+        .submission-student {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        .submission-lesson {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .submission-date {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .check-btn {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            color: white;
+            padding: 1rem 2.5rem;
+            border: none;
+            border-radius: 25px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .check-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(56, 239, 125, 0.5);
+        }
+
+        .check-btn.active {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+        }
+
+        .submission-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+            background: #f8f9fa;
+        }
+
+        .submission-details.active {
+            max-height: 2000px;
+        }
+
+        .details-content {
+            padding: 2rem;
+        }
+
+        .submission-text {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            color: #333;
+            font-size: 1.05rem;
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+            white-space: pre-wrap;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .files-panel {
+            background: rgba(102, 126, 234, 0.05);
+            border: 2px dashed #667eea;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .files-title {
+            font-size: 1.2rem;
+            color: #667eea;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .file-item {
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-item:hover {
+            transform: translateX(5px);
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .grading-panel {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .grading-title {
+            font-size: 1.5rem;
+            color: #333;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+
+        .grade-input-group {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .grade-input {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            font-size: 1.2rem;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .grade-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .submit-grade-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 1rem 2.5rem;
+            border: none;
+            border-radius: 25px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-grade-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+        }
+
+        .feedback-textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            font-size: 1rem;
+            resize: vertical;
+            margin-bottom: 1rem;
+        }
+
+        .feedback-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        @media (max-width: 968px) {
+            .submission-header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .check-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">CodeNest</div>
+        <button class="back-btn" onclick="window.location.href='/teacher/'">← Мұғалім панеліне оралу</button>
+    </nav>
+
+    <div class="container">
+        <h1 class="page-title">Оқушылар тапсырмаларын тексеру</h1>
+
+        <div class="submissions-list" id="submissionsList">
+            <div style="text-align: center; padding: 3rem; color: white; font-size: 1.2rem;">
+                ⏳ Тапсырмалар жүктелуде...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getCSRFToken() {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    let cookie = cookies[i].trim();
+                    if (cookie.startsWith('csrftoken=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(10));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        async function loadSubmissions() {
+            try {
+                const response = await fetch('/api/teacher/submissions/');
+                const data = await response.json();
+
+                renderSubmissions(data.submissions);
+
+            } catch (error) {
+                console.error('Тапсырмаларды жүктеу қатесі:', error);
+                document.getElementById('submissionsList').innerHTML = `
+                    <div style="text-align: center; padding: 3rem; color: white; font-size: 1.2rem;">
+                        ❌ Тапсырмаларды жүктеу қатесі
+                    </div>
+                `;
+            }
+        }
+
+        function renderSubmissions(submissions) {
+            const container = document.getElementById('submissionsList');
+
+            if (submissions.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 3rem; color: white; font-size: 1.2rem;">
+                        📚 Тексеруге арналған тапсырмалар жоқ
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = submissions.map(sub => `
+                <div class="submission-card">
+                    <div class="submission-header" onclick="toggleDetails(this)">
+                        <div class="submission-info">
+                            <div class="submission-student">${sub.student_name}</div>
+                            <div class="submission-lesson">Сабақ #${sub.lesson_number}: ${sub.lesson_title}</div>
+                            <div class="submission-date">Жіберілді: ${sub.submitted_date}</div>
+                        </div>
+                        <button class="check-btn">
+                            ${sub.has_grade ? 'Көру' : 'Тексеру'} ▼
+                        </button>
+                    </div>
+                    <div class="submission-details">
+                        <div class="details-content">
+                            <div class="submission-text">${sub.submission_text || 'Мәтін берілмеген'}</div>
+
+                            ${sub.files && sub.files.length > 0 ? `
+                                <div class="files-panel">
+                                    <div class="files-title">📎 Жүктелген файлдар</div>
+                                    ${sub.files.map(file => `
+                                        <div class="file-item" onclick="downloadFile('${file.url}')">
+                                            📄 ${file.name}
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+
+                            <div class="grading-panel">
+                                <div class="grading-title">Баға қою</div>
+                                <div class="grade-input-group">
+                                    <input
+                                        type="number"
+                                        class="grade-input"
+                                        id="grade-${sub.id}"
+                                        min="0"
+                                        max="100"
+                                        placeholder="Баға (0-100)"
+                                        value="${sub.grade || ''}"
+                                    >
+                                    <span style="font-size: 1.5rem; color: #333;">%</span>
+                                </div>
+                                <textarea
+                                    class="feedback-textarea"
+                                    id="feedback-${sub.id}"
+                                    placeholder="Оқушыға арналған түсініктеме (міндетті емес)..."
+                                >${sub.feedback || ''}</textarea>
+                                <button class="submit-grade-btn" onclick="submitGrade(${sub.id}, ${sub.student_id}, ${sub.lesson_id})">
+                                    ✅ Бағаны сақтау
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleDetails(header) {
+            const card = header.closest('.submission-card');
+            const details = card.querySelector('.submission-details');
+            const btn = card.querySelector('.check-btn');
+
+            // Барлық басқа карточкаларды жабу
+            document.querySelectorAll('.submission-details.active').forEach(detail => {
+                if (detail !== details) {
+                    detail.classList.remove('active');
+                    detail.closest('.submission-card').querySelector('.check-btn').classList.remove('active');
+                }
+            });
+
+            // Ағымдағысын ауыстыру
+            details.classList.toggle('active');
+            btn.classList.toggle('active');
+        }
+
+        async function submitGrade(submissionId, studentId, lessonId) {
+            const grade = document.getElementById(`grade-${submissionId}`).value;
+            const feedback = document.getElementById(`feedback-${submissionId}`).value;
+
+            if (!grade || grade < 0 || grade > 100) {
+                alert('⚠️ Өтінемін, 0-ден 100-ге дейінгі бағаны енгізіңіз');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/teacher/submit-grade/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    body: JSON.stringify({
+                        submission_id: submissionId,
+                        student_id: studentId,
+                        lesson_id: lessonId,
+                        grade: parseInt(grade),
+                        feedback: feedback
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('✅ Баға сәтті сақталды!');
+                    loadSubmissions(); // Тізімді қайта жүктеу
+                } else {
+                    alert('❌ Қате: ' + result.message);
+                }
+
+            } catch (error) {
+                console.error('Бағаны сақтау қатесі:', error);
+                alert('❌ Бағаны сақтау кезінде қате орын алды');
+            }
+        }
+
+        function downloadFile(url) {
+            window.open(url, '_blank');
+        }
+
+        // Бет ашылғанда жүктеу
+        document.addEventListener('DOMContentLoaded', loadSubmissions);
+    </script>
+</body>
+</html>

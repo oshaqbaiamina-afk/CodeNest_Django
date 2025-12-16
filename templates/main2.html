@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% if user.is_authenticated %}
+        <meta name="user-email" content="{{ user.email }}">
+    {% endif %}
+    <title>CodeNest - Курстар</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            transition: all 0.3s ease;
+            overflow-x: hidden;
+        }
+
+        body.normal {
+            background: 
+                radial-gradient(ellipse at top left, rgba(102, 126, 234, 0.4), transparent 50%),
+                radial-gradient(ellipse at top right, rgba(240, 147, 251, 0.4), transparent 50%),
+                radial-gradient(ellipse at bottom left, rgba(56, 239, 125, 0.4), transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(79, 172, 254, 0.4), transparent 50%),
+                linear-gradient(135deg, #667eea 0%, #764ba2 20%, #f093fb 40%, #4facfe 60%, #00f2fe 80%, #667eea 100%);
+            background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 400% 400%;
+            animation: gradientShift 20s ease infinite;
+            color: #333;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 50%; }
+            50% { background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 100% 50%; }
+            100% { background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 50%; }
+        }
+
+        body.high-contrast {
+            background: #000;
+            color: #fff;
+            animation: none;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 1.2rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        body.high-contrast .navbar {
+            background: #1a1a1a;
+            border-bottom: 2px solid #fff;
+            backdrop-filter: none;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 900;
+            color: white;
+            text-shadow: 0 2px 10px rgba(102, 126, 234, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+        }
+
+        .logo::before {
+            content: '</>';
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-search {
+            flex: 1;
+            max-width: 500px;
+            margin: 0 2rem;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.9rem 3rem 0.9rem 1.5rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .search-input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        body.high-contrast .search-input {
+            background: #2a2a2a;
+            border-color: #555;
+            color: #fff;
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 1.2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.3rem;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            position: relative;
+        }
+
+        .courses-dropdown-container {
+            position: relative;
+        }
+
+        .menu-toggle {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 0.8rem 1.8rem;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .menu-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        body.high-contrast .menu-toggle {
+            background: transparent;
+            border-color: #fff;
+        }
+
+        .dropdown-arrow {
+            transition: transform 0.3s ease;
+        }
+
+        .menu-toggle.active .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+
+        .courses-dropdown {
+            position: absolute;
+            top: calc(100% + 1rem);
+            right: 0;
+            width: 320px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1001;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        body.high-contrast .courses-dropdown {
+            background: rgba(26, 26, 26, 0.98);
+            border: 2px solid #fff;
+        }
+
+        .courses-dropdown.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            margin-bottom: 0.8rem;
+        }
+
+        .dropdown-button {
+            width: 100%;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            color: #333;
+            padding: 0.9rem 1.2rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-align: left;
+        }
+
+        body.high-contrast .dropdown-button {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: #555;
+            color: #fff;
+        }
+
+        .dropdown-button:hover {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
+            border-color: rgba(102, 126, 234, 0.5);
+        }
+
+        .dropdown-button.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: transparent;
+        }
+
+        .dropdown-arrow-item {
+            transition: transform 0.3s ease;
+            font-size: 0.8rem;
+        }
+
+        .dropdown-button.active .dropdown-arrow-item {
+            transform: rotate(90deg);
+        }
+
+        .dropdown-submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+            margin-top: 0.5rem;
+            padding-left: 0.5rem;
+        }
+
+        .dropdown-submenu.active {
+            max-height: 400px;
+        }
+
+        .dropdown-subitem {
+            background: rgba(102, 126, 234, 0.05);
+            border: none;
+            border-left: 3px solid transparent;
+            color: #555;
+            padding: 0.7rem 1rem;
+            margin: 0.3rem 0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+            width: 100%;
+            text-align: left;
+        }
+
+        body.high-contrast .dropdown-subitem {
+            background: rgba(255, 255, 255, 0.02);
+            color: #ccc;
+        }
+
+        .dropdown-subitem:hover {
+            background: rgba(102, 126, 234, 0.15);
+            border-left-color: #667eea;
+            transform: translateX(5px);
+            color: #667eea;
+        }
+
+        body.high-contrast .dropdown-subitem:hover {
+            color: #fff;
+            border-left-color: #fff;
+        }
+
+        .profile-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            color: white;
+            padding: 0.8rem 1.8rem;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .profile-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        body.high-contrast .profile-btn {
+            background: #fff;
+            color: #000;
+        }
+
+        .sidebar {
+            display: none;
+        }
+
+        .overlay {
+            display: none;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 4rem 5%;
+        }
+
+        .hero-section {
+            text-align: center;
+            padding: 4rem 0;
+        }
+
+        .hero-section h1 {
+            font-size: 4.5rem;
+            font-weight: 900;
+            color: white;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            margin-bottom: 2rem;
+        }
+
+        body.high-contrast .hero-section h1 {
+            color: #fff;
+        }
+
+        .hero-search {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .hero-search .search-input {
+            padding: 1.2rem 4rem 1.2rem 2rem;
+            font-size: 1.1rem;
+        }
+
+        .courses-section {
+            margin-top: 5rem;
+        }
+
+        .course-card {
+            margin-bottom: 4rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .course-content h2 {
+            font-size: 3.5rem;
+            color: white;
+            margin-bottom: 1.5rem;
+            font-weight: 800;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        body.high-contrast .course-content h2 {
+            color: #fff;
+        }
+
+        .course-content p {
+            font-size: 1.3rem;
+            color: rgba(255, 255, 255, 0.95);
+            margin-bottom: 2rem;
+            line-height: 1.9;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        body.high-contrast .course-content p {
+            color: #ccc;
+        }
+
+        .course-meta {
+            display: flex;
+            gap: 2.5rem;
+            margin-bottom: 2.5rem;
+            flex-wrap: wrap;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .meta-item span {
+            font-size: 1.5rem;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            color: white;
+            padding: 1.2rem 3.5rem;
+            border-radius: 35px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 8px 30px rgba(56, 239, 125, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(56, 239, 125, 0.7);
+        }
+
+        .course-image {
+            width: 100%;
+            height: 400px;
+            animation: floatImage 6s ease-in-out infinite;
+        }
+
+        @keyframes floatImage {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .features-section {
+            margin-top: 6rem;
+            text-align: center;
+        }
+
+        .section-title {
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: white;
+            margin-bottom: 4rem;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        body.high-contrast .section-title {
+            color: #fff;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3rem;
+            margin-bottom: 5rem;
+        }
+
+        .feature-card {
+            text-align: center;
+            color: white;
+            transition: all 0.4s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-15px);
+        }
+
+        .feature-icon {
+            font-size: 5rem;
+            margin-bottom: 1.5rem;
+            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3));
+        }
+
+        .feature-card h3 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .feature-card p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.15rem;
+            line-height: 1.7;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 3rem;
+            margin-top: 4rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 4rem;
+            font-weight: 900;
+            color: white;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat-label {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 600;
+        }
+
+        .footer {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(20px);
+            padding: 3rem 5%;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            margin-top: 6rem;
+        }
+
+        body.high-contrast .footer {
+            background: #1a1a1a;
+            border-top: 2px solid #fff;
+            backdrop-filter: none;
+        }
+
+        .copyright {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1rem;
+        }
+
+        body.high-contrast .copyright {
+            color: #999;
+        }
+
+        .dropdown-subitem.highlight {     
+            background-color: #ffc107; 
+            border: 2px solid #dc3545;
+            transition: background-color 0.5s ease, border 0.5s ease;
+        }
+
+        @media (max-width: 968px) {
+            .course-card {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .hero-section h1 {
+                font-size: 3rem;
+            }
+
+            .nav-search {
+                display: none;
+            }
+
+            .sidebar {
+                width: 300px;
+            }
+        }
+
+    </style>
+</head>
+<body class="normal">
+    {% load static %}
+    
+    {% if query %}
+        <input type="hidden" id="search-query" value="{{ query }}">
+    {% endif %}
+
+    <nav class="navbar">
+        <div class="logo" onclick="window.location.reload()">CodeNest</div>
+        
+        <div class="nav-search">
+            <form action="{% url 'search' %}" method="GET" class="search-box">
+                <input type="text" name="q" class="search-input" placeholder="Search courses...">
+                <button type="submit" class="search-icon">🔍</button>
+            </form>
+        </div>
+        
+        <div class="nav-buttons">
+            {% if user.is_authenticated %}
+                <button class="profile-btn" id="profileBtn" onclick="window.location.href='{% url 'profile' %}'">
+                    👤{{ user.full_name|default:user.email|truncatechars:15 }}
+                </button>
+                <button class="profile-btn logout-btn" onclick="logout('{% url 'index' %}')">
+                    🚪Шығу
+                </button>
+            {% else %}
+                
+            {% endif %}
+
+            <div class="courses-dropdown-container">
+                <button class="menu-toggle" id="coursesToggle">
+                    📚 Курстар <span class="dropdown-arrow">▼</span>
+                </button>
+                <div class="courses-dropdown" id="coursesDropdown">
+                    <div class="dropdown-item">
+                        <button class="dropdown-button" data-submenu="web-drop">
+                            🌐 Web Development
+                            <span class="dropdown-arrow-item">▶</span>
+                        </button>
+                        <div class="dropdown-submenu" id="submenu-web-drop">
+                            <button class="dropdown-subitem" data-target-file="main_webdep.html" data-target-lesson="HTML Fundamentals">HTML негіздері және құрылымы</button>
+                            <button class="dropdown-subitem" data-target-file="main_webdep.html" data-target-lesson="CSS Styling">HTML кеңейтілген элементтері</button>
+                            <button class="dropdown-subitem" data-target-file="main_webdep.html" data-target-lesson="Responsive Design">CSS негіздері және стильдеу</button>
+                            <button class="dropdown-subitem" data-target-file="main_webdep.html" data-target-lesson="CSS Frameworks">CSS кеңейтілген стильдеу және орналасу</button>
+                        </div>
+                    </div>
+
+                    <div class="dropdown-item">
+                        <button class="dropdown-button" data-submenu="python-drop">
+                            🐍 Python Programming
+                            <span class="dropdown-arrow-item">▶</span>
+                        </button>
+                        <div class="dropdown-submenu" id="submenu-python-drop">
+                            <button class="dropdown-subitem" data-target-file="main_pt.html" data-target-lesson="Python Basics">Python негіздері</button>
+                            <button class="dropdown-subitem" data-target-file="main_pt.html" data-target-lesson="Data Structures">Циклдер мен тізімдер</button>
+                            <button class="dropdown-subitem" data-target-file="main_pt.html" data-target-lesson="Object-Oriented Python">Күрделі құрылымдар</button>
+                            <button class="dropdown-subitem" data-target-file="main_pt.html" data-target-lesson="Python Libraries">Функциялар, модульдер және файлдармен жұмыс</button>
+                            <button class="dropdown-subitem" data-target-file="main_pt.html" data-target-lesson="Web Scraping">Объектіге бағытталған бағдарламалау (OOP) негіздері</button>
+                        </div>
+                    </div>
+
+                    <div class="dropdown-item">
+                        <button class="dropdown-button" data-submenu="sql-drop">
+                            🗄️ SQL Database
+                            <span class="dropdown-arrow-item">▶</span>
+                        </button>
+                        <div class="dropdown-submenu" id="submenu-sql-drop">
+                            <button class="dropdown-subitem" data-target-file="main_sql.html" data-target-lesson="SQL Basics">SQL негіздері</button>
+                            <button class="dropdown-subitem" data-target-file="main_sql.html" data-target-lesson="Query Optimization">SELECT және шарттар (WHERE)</button>
+                            <button class="dropdown-subitem" data-target-file="main_sql.html" data-target-lesson="Database Design">JOIN және бірнеше кестелер</button>
+                            <button class="dropdown-subitem" data-target-file="main_sql.html" data-target-lesson="Advanced SQL">GROUP BY және агрегаттық функциялар</button>
+                            <button class="dropdown-subitem" data-target-file="main_sql.html" data-target-lesson="Stored Procedures">Деректерді жаңарту және жою (UPDATE, DELETE)</button>
+                        </div>
+                    </div>
+
+                    <div class="dropdown-item">
+                        <button class="dropdown-button" data-submenu="js-drop">
+                            ⚡ JavaScript
+                            <span class="dropdown-arrow-item">▶</span>
+                        </button>
+                        <div class="dropdown-submenu" id="submenu-js-drop">
+                            <button class="dropdown-subitem" data-target-file="main_js.html" data-target-lesson="JavaScript Fundamentals">JavaScript негіздері</button>
+                            <button class="dropdown-subitem" data-target-file="main_js.html" data-target-lesson="DOM Manipulation">Басқару конструкциялары және функциялар</button>
+                            <button class="dropdown-subitem" data-target-file="main_js.html" data-target-lesson="ES6+ Features">DOM және оқиғалар (Events)</button>
+                            <button class="dropdown-subitem" data-target-file="main_js.html" data-target-lesson="Async JavaScript">Асинхронды JavaScript, Promises, fetch және сақтау</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <section class="hero-section">
+            <h1>Оқуды қазір бастаңыз</h1>
+            <div class="hero-search">
+                <div class="search-box">
+                    <form action="{% url 'search' %}" method="GET" class="search-box">
+                        <input type="text" name="q" class="search-input" placeholder="Бүгін не білгіңіз келеді?">
+                        <button type="submit" class="search-icon">🔍</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <section class="courses-section">
+            <!-- Web Development Course -->
+            <div class="course-card">
+                <div class="course-content">
+                    <h2>🌐 Web Development</h2>
+                    <p>HTML және CSS көмегімен веб-әзірлеу негіздерін меңгеріңіз. Әдемі, жауап беретін веб-сайттарды нөлден бастап жасаңыз және заманауи веб-дизайнның негізін біліңіз.</p>
+                    <div class="course-meta">
+                        <div class="meta-item">
+                            <span>⏱️</span>
+                            <span>40 сағат</span>
+                        </div>
+                        <div class="meta-item">
+                            <span>📚</span>
+                            <span>25 сабақ</span>
+                        </div>
+                        <div class="meta-item">
+                            <span>🎯</span>
+                            <span>Бастапқы</span>
+                        </div>
+                    </div>
+                    <button class="start-btn" data-target-file="main_webdep.html">Курсты бастау</button>
+                </div>
+                <div class="course-image">
+                    <svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <filter id="glow1">
+                                <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+                                <feMerge>
+                                    <feMergeNode in="coloredBlur"/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+                        </defs>
+                        <circle cx="150" cy="100" r="80" fill="#667eea" opacity="0.2" filter="url(#glow1)"/>
+                        <circle cx="450" cy="300" r="90" fill="#38ef7d" opacity="0.2" filter="url(#glow1)"/>
+                        <rect x="100" y="80" width="400" height="240" rx="15" fill="#1a1a1a" filter="url(#glow1)"/>
+                        <rect x="100" y="80" width="400" height="35" rx="15" fill="#2d2d2d"/>
+                        <circle cx="120" cy="97" r="5" fill="#ff5f56"/>
+                        <circle cx="135" cy="97" r="5" fill="#ffbd2e"/>
+                        <circle cx="150" cy="97" r="5" fill="#27c93f"/>
+                        <text x="130" y="155" font-family="monospace" font-size="20" fill="#ff79c6" font-weight="bold">&lt;html&gt;</text>
+                        <text x="150" y="185" font-family="monospace" font-size="18" fill="#8be9fd">  &lt;body&gt;</text>
+                        <text x="170" y="215" font-family="monospace" font-size="18" fill="#50fa7b">    &lt;h1&gt;CodeNest&lt;/h1&gt;</text>
+                        <text x="150" y="245" font-family="monospace" font-size="18" fill="#8be9fd">  &lt;/body&gt;</text>
+                        <text x="130" y="275" font-family="monospace" font-size="20" fill="#ff79c6" font-weight="bold">&lt;/html&gt;</text>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Python Course -->
+            <div class="course-card">
+                <div class="course-image">
+                    <svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <filter id="glow2">
+                                <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+                                <feMerge>
+                                    <feMergeNode in="coloredBlur"/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+                        </defs>
+                        <circle cx="500" cy="100" r="70" fill="#f093fb" opacity="0.2" filter="url(#glow2)"/>
+                        <circle cx="100" cy="300" r="80" fill="#4facfe" opacity="0.2" filter="url(#glow2)"/>
+                        <text x="220" y="160" font-size="140" fill="#3776ab" opacity="0.9" filter="url(#glow2)">🐍</text>
+                        <rect x="120" y="230" width="360" height="100" rx="15" fill="#1a1a1a" filter="url(#glow2)"/>
+                        <text x="140" y="265" font-family="monospace" font-size="18" fill="#f1fa8c">def learn():</text>
+                        <text x="160" y="290" font-family="monospace" font-size="16" fill="#50fa7b">    return "Python!"</text>
+                        <text x="140" y="315" font-family="monospace" font-size="18" fill="#bd93f9">learn() ✓</text>
+                    </svg>
+                </div>
+                <div class="course-content">
+                    <h2>🐍 Python Programming</h2>
+                    <p>Python - ең танымал және әмбебап бағдарламалау тілін үйреніңіз. Жаңадан бастаушылар үшін өте қолайлы және оны бүкіл әлемдегі кәсіпқойлар қолданады.</p>
+                    <div class="course-meta">
+                        <div class="meta-item">
+                            <span>⏱️</span>
+                            <span>50 сағат</span>
+                        </div>
+                        <div class="meta-item">
+                            <span>📚</span>
+                            <span>35 сабақ</span>
+                        </div>
+                        <div class="meta-item">
+                            <span>🎯</span>
+                            <span>Бастапқы</span>
+                        </div>
+                    </div>
+                    <button class="start-btn" data-target-file="main_pt.html">Курсты бастау</button>
+                </div>
+            </div>
+
+            <!-- SQL Course -->
+            <div class="course-card">
+                <div class="course-content">
+                    <h2>🗄️ SQL Database</h2>
+                    <p>SQL және дерекқорды басқаруды меңгеріңіз. Деректерді тиімді сақтауды, алуды және басқаруды үйреніңіз. Кез келген әзірлеуші үшін қажетті дағдылар.</p>
+                    <div class="course-meta">
+                        <div class="meta-item">
+                            <span>⏱️</span>
+                            <span>35 сағат</span>
+                        </div>
+                        <div class="meta-item">
+                            <span>📚</span>
+                            <span>20 сабақ</span>
+                        </div>
+                        <div class="meta-item">
+                            <span>🎯</span>
+                            <span>Орташа</span>
+                        </div>
+                    </div>
+                    <button class="start-btn" data-target-file="main_sql.html">Курсты бастау</button>
+                </div>
+                <div class="course-image">
+                    <svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <filter id="glow3">
+                                <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+                                <feMerge>
+                                    <feMergeNode in="coloredBlur"/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+                        </defs>
+                        <circle cx="150" cy="300" r="70" fill="#667eea" opacity="0.2" filter="url(#glow3)"/>
+                        <circle cx="450" cy="120" r="85" fill="#38ef7d" opacity="0.2" filter="url(#glow3)"/>
+                        <rect x="130" y="100" width="340" height="200" rx="15" fill="#1a1a1a" filter="url(#glow3)"/>
+                        <rect x="145" y="115" width="310" height="35" fill="#2d2d2d" rx="5"/>
+                        <text x="160" y="137" font-family="monospace" font-size="16" fill="#8be9fd" font-weight="bold">ID | Course | Level</text>
+                        <line x1="145" y1="150" x2="455" y2="150" stroke="#50fa7b" stroke-width="2"/>
+                        <text x="160" y="175" font-family="monospace" font-size="14" fill="#fff">1 | Python | Easy</text>
+                        <text x="160" y="200" font-family="monospace" font-size="14" fill="#fff">2 | SQL | Medium</text>
+                        <text x="160" y="225" font-family="monospace" font-size="14" fill="#fff">3 | JavaScript | Medium</text>
+                        <text x="160" y="260" font-family="monospace" font-size="16" fill="#f1fa8c">SELECT * FROM courses;</text>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- JavaScript Course -->
+            <div class="course-card">
+                <div class="course-image">
+                    <svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <filter id="glow4">
+                                <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+                                <feMerge>
+                                    <feMergeNode in="coloredBlur"/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+                        </defs>
+                        <circle cx="100" cy="100" r="75" fill="#4facfe" opacity="0.2" filter="url(#glow4)"/>
+                        <circle cx="500" cy="320" r="90" fill="#f093fb" opacity="0.2" filter="url(#glow4)"/>
+                        <rect x="180" y="110" width="240" height="180" rx="20" fill="#f7df1e" filter="url(#glow4)"/>
+                        <text x="230" y="225" font-size="100" font-weight="bold" fill="#323330">JS</text>
+                        <rect x="150" y="310" width="300" height="50" rx="10" fill="#1a1a1a" filter="url(#glow4)"/>
+                        <text x="170" y="342" font-family="monospace" font-size="18" fill="#50fa7b">console.log("Hello!");</text>
+                    </svg>
+                </div>
+                <div class="course-content">
+                    <h2>⚡ JavaScript</h2>
+                    <p>JavaScript көмегімен веб-сайттарыңызды жандандырыңыз! Интерактивті, динамикалық веб-қосымшаларды құруды үйреніңіз. Заманауи веб-дамуды басқаратын тілді меңгеріңіз.</p>
+                    <div class="course-meta">
+                        <div class="meta-item">
+                            <span>⏱️</span>
+                            <span>45 сағат</span>
+                        </div>
+                        <div class="meta-item">
+                            <span>📚</span>
+                            <span>30 сабақ</span>
+                        </div>
+                        <div class="meta-item">
+                            <span>🎯</span>
+                            <span>Орташа</span>
+                        </div>
+                    </div>
+                    <button class="start-btn" data-target-file="main_js.html">Начать курс</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="features-section">
+            <h2 class="section-title">Неліктен студенттер CodeNest таңдайды</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🎓</div>
+                    <h3>Сарапшы-оқытушылар</h3>
+                    <p>Көп жылдық тәжірибесі бар сала мамандарынан үйреніңіз</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💻</div>
+                    <h3>Практикалық жобалар</h3>
+                    <p>Нақты жобаларды жасаңыз және оларды портфолиоға қосыңыз</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🏆</div>
+                    <h3>Сертификаты</h3>
+                    <p>Курсты аяқтағаннан кейін сертификатты жүктеңіз</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👥</div>
+                    <h3>Қауымдастықты қолдау</h3>
+                    <p>Мыңдаған оқушыларға қосылыңыз және көмек алыңыз</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3>Кез келген жерде оқыңыз</h3>
+                    <p>Кез келген құрылғыда, кез келген уақытта курстарға қол жеткізу</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">♾️</div>
+                    <h3>Өмір бойы қол жетімділік</h3>
+                    <p>Курстың барлық материалдарына шексіз қол жетімділік</p>
+                </div>
+            </div>
+
+            <h2 class="section-title">Біздің жетістіктеріміз</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number">10K+</div>
+                    <div class="stat-label">Белсенді студенттер</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">50+</div>
+                    <div class="stat-label">Сарапшы-менторлар</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">4.8★</div>
+                    <div class="stat-label">Орташа рейтинг</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">95%</div>
+                    <div class="stat-label">Табыс</div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer class="footer">
+        <div class="copyright">
+            © 2025 CodeNest. Барлық құқықтар қорғалған. Бағдарламашылардың келесі буынын шабыттандырыңыз.
+        </div>
+    </footer>
+
+    {% load static %}
+    <script src="{% static 'scripts2.js' %}" defer></script>
+
+</body>
+</html>

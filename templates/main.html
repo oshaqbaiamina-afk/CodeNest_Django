@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeNest - Бағдарламалауды Үйреніңіз</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            transition: all 0.3s ease;
+            overflow-x: hidden;
+        }
+
+        body.normal {
+            background: 
+                radial-gradient(ellipse at top left, rgba(102, 126, 234, 0.4), transparent 50%),
+                radial-gradient(ellipse at top right, rgba(240, 147, 251, 0.4), transparent 50%),
+                radial-gradient(ellipse at bottom left, rgba(56, 239, 125, 0.4), transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(79, 172, 254, 0.4), transparent 50%),
+                linear-gradient(135deg, #667eea 0%, #764ba2 20%, #f093fb 40%, #4facfe 60%, #00f2fe 80%, #667eea 100%);
+            background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 400% 400%;
+            animation: gradientShift 20s ease infinite;
+            color: #333;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 50%; }
+            50% { background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 100% 50%; }
+            100% { background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 50%; }
+        }
+
+        body.high-contrast {
+            background: #000;
+            color: #fff;
+            animation: none;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 1.2rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        body.high-contrast .navbar {
+            background: #1a1a1a;
+            border-bottom: 2px solid #fff;
+            backdrop-filter: none;
+        }
+
+        .logo {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        cursor: pointer;
+        }
+
+        .logo-image {
+            height: 50px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .logo-icon {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo span {
+            font-size: 2rem;
+            font-weight: 900;
+            color: white;
+            text-shadow: 0 2px 10px rgba(102, 126, 234, 0.5);
+        }
+
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.8rem 1.8rem;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-green {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            color: white;
+            box-shadow: 0 4px 20px rgba(56, 239, 125, 0.4);
+        }
+
+        .btn-green:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(56, 239, 125, 0.6);
+        }
+
+        .btn-outline {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+
+        body.high-contrast .btn-outline {
+            border-color: #fff;
+            color: #fff;
+            background: transparent;
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+        }
+
+        body.high-contrast .btn-outline:hover {
+            background: #fff;
+            color: #000;
+        }
+
+        .hero {
+            min-height: 90vh;
+            display: flex;
+            align-items: center;
+            padding: 4rem 5%;
+            position: relative;
+        }
+
+        .hero-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5rem;
+            align-items: center;
+            width: 100%;
+        }
+
+        .hero-content h1 {
+            font-size: 5.5rem;
+            font-weight: 900;
+            color: white;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            margin-bottom: 1.5rem;
+            line-height: 1.1;
+        }
+
+        body.high-contrast .hero-content h1 {
+            color: #fff;
+        }
+
+        .hero-content p {
+            font-size: 1.4rem;
+            color: rgba(255, 255, 255, 0.95);
+            line-height: 1.8;
+            margin-bottom: 2.5rem;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        body.high-contrast .hero-content p {
+            color: #ccc;
+        }
+
+        .cta-button {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            color: white;
+            padding: 1.2rem 3rem;
+            border-radius: 35px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 8px 30px rgba(56, 239, 125, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(56, 239, 125, 0.7);
+        }
+
+        .hero-image-container {
+            position: relative;
+        }
+
+        .hero-image {
+            width: 100%;
+            height: 600px;
+            animation: floatImage 6s ease-in-out infinite;
+        }
+
+        @keyframes floatImage {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .floating-icon {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1.2rem;
+            border-radius: 20px;
+            font-size: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .floating-icon:nth-child(1) {
+            top: 10%;
+            left: -10%;
+            animation-delay: 0s;
+        }
+
+        .floating-icon:nth-child(2) {
+            top: 60%;
+            left: -15%;
+            animation-delay: 1s;
+        }
+
+        .floating-icon:nth-child(3) {
+            top: 20%;
+            right: -10%;
+            animation-delay: 2s;
+        }
+
+        .floating-icon:nth-child(4) {
+            bottom: 15%;
+            right: -15%;
+            animation-delay: 1.5s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .section {
+            padding: 5rem 5%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section h2 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 3rem;
+            text-align: center;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        body.high-contrast .section h2 {
+            color: #fff;
+        }
+
+        .section p {
+            font-size: 1.3rem;
+            color: rgba(255, 255, 255, 0.95);
+            text-align: center;
+            max-width: 1000px;
+            margin: 0 auto 3rem;
+            line-height: 1.9;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        body.high-contrast .section p {
+            color: #ccc;
+        }
+
+        .audience-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2.5rem;
+            margin-top: 3rem;
+        }
+
+        .audience-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            padding: 3.5rem 2.5rem;
+            border-radius: 30px;
+            text-align: center;
+            color: white;
+            transition: all 0.4s ease;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        body.high-contrast .audience-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid #fff;
+        }
+
+        .audience-card:hover {
+            transform: translateY(-15px) scale(1.03);
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .audience-card h3 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .audience-card p {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 1.15rem;
+            text-shadow: none;
+        }
+
+        .courses-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 3rem;
+            margin-top: 3rem;
+        }
+
+        .course-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            padding: 3.5rem;
+            border-radius: 30px;
+            transition: all 0.4s ease;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+
+        body.high-contrast .course-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid #fff;
+        }
+
+        .course-card:hover {
+            transform: translateY(-10px);
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .course-icon {
+            font-size: 4.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .course-card h3 {
+            font-size: 2.2rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .course-card p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.15rem;
+            text-align: left;
+            text-shadow: none;
+        }
+
+        .advantages-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2.5rem;
+            margin-top: 3rem;
+        }
+
+        .advantage-item {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            padding: 2.5rem;
+            border-radius: 25px;
+            color: white;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        body.high-contrast .advantage-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid #fff;
+        }
+
+        .advantage-item:hover {
+            transform: translateX(10px);
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .advantage-item::before {
+            content: "✓";
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            flex-shrink: 0;
+            box-shadow: 0 5px 20px rgba(56, 239, 125, 0.4);
+        }
+
+        .footer {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(20px);
+            padding: 4rem 5%;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        body.high-contrast .footer {
+            background: #1a1a1a;
+            border-top: 2px solid #fff;
+            backdrop-filter: none;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer h3 {
+            color: white;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+        }
+
+        body.high-contrast .footer h3 {
+            color: #fff;
+        }
+
+        .contact-info {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+
+        .contact-item {
+            color: rgba(255, 255, 255, 0.95);
+            text-decoration: none;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            padding: 0.8rem 1.5rem;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        body.high-contrast .contact-item {
+            color: #ccc;
+        }
+
+        .contact-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px);
+        }
+
+        body.high-contrast .contact-item:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .copyright {
+            margin-top: 3rem;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1rem;
+        }
+
+        body.high-contrast .copyright {
+            color: #999;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 3rem;
+            border-radius: 30px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        body.high-contrast .modal-content {
+            background: #1a1a1a;
+            border: 2px solid #fff;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            font-size: 2rem;
+            color: #999;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: none;
+            border: none;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .close-modal:hover {
+            color: #333;
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        body.high-contrast .close-modal {
+            color: #ccc;
+        }
+
+        body.high-contrast .close-modal:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-content h2 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        body.high-contrast .modal-content h2 {
+            background: #fff;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .auth-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            background: #f0f0f0;
+            color: #666;
+            font-weight: 600;
+            font-size: 1rem;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        body.high-contrast .auth-tab {
+            background: #333;
+            color: #ccc;
+        }
+
+        .auth-tab.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 600;
+        }
+
+        body.high-contrast .form-group label {
+            color: #fff;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        body.high-contrast .form-group input {
+            background: #2a2a2a;
+            border-color: #555;
+            color: #fff;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            color: white;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(56, 239, 125, 0.4);
+        }
+
+        .form-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        body.high-contrast .form-footer {
+            color: #ccc;
+        }
+
+        @media (max-width: 968px) {
+            .hero-container {
+                grid-template-columns: 1fr;
+                gap: 3rem;
+            }
+
+            .hero-content h1 {
+                font-size: 3.5rem;
+            }
+
+            .hero-image {
+                height: 400px;
+            }
+
+            .audience-grid,
+            .courses-grid,
+            .advantages-list {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-buttons {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+
+            .btn {
+                padding: 0.6rem 1.2rem;
+                font-size: 0.85rem;
+            }
+
+            .floating-icon {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body class="normal">
+    <nav class="navbar">
+        <div class="logo">
+            <span class="logo-icon">&lt;/&gt;</span>
+            <span>CodeNest</span>
+        </div>
+        <div class="nav-buttons">
+            <button class="btn btn-outline" onclick="toggleContrast()">Контраст</button>
+            <button class="btn btn-outline" onclick="scrollToInfo()">Ақпарат</button>
+            <button class="btn btn-green" onclick="openAuthModal()">Кіру / Тіркелу</button>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1>CodeNest</h1>
+                <p>Бағдарламалауды меңгеру жолыңыз осы жерден басталады. Жаңадан бастаған әзірлеушілердің қолдау көрсететін қауымдастығында кәсіби басшылықпен үйреніңіз, тәжірибе жасаңыз және өсіңіз.</p>
+                <button class="cta-button" onclick="openAuthModal()">Тегін Оқуды Бастаңыз</button>
+            </div>
+            <div class="hero-image-container">
+                <svg class="hero-image" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="screen-glow" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#667eea;stop-opacity:0.8" />
+                            <stop offset="100%" style="stop-color:#764ba2;stop-opacity:0.8" />
+                        </linearGradient>
+                        <filter id="glow">
+                            <feGaussianBlur stdDeviation="10" result="coloredBlur"/>
+                            <feMerge>
+                                <feMergeNode in="coloredBlur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                    </defs>
+                    
+                    <!-- Glowing circles in background -->
+                    <circle cx="200" cy="150" r="100" fill="#667eea" opacity="0.15" filter="url(#glow)"/>
+                    <circle cx="650" cy="450" r="120" fill="#38ef7d" opacity="0.15" filter="url(#glow)"/>
+                    <circle cx="700" cy="150" r="80" fill="#f093fb" opacity="0.15" filter="url(#glow)"/>
+                    
+                    <!-- Monitor with glowing screen -->
+                    <rect x="150" y="120" width="500" height="340" rx="20" fill="#1a1a1a" filter="url(#glow)"/>
+                    <rect x="160" y="130" width="480" height="300" rx="10" fill="url(#screen-glow)" opacity="0.9"/>
+                    
+                    <!-- Code text with glow -->
+                    <text x="190" y="180" font-family="monospace" font-size="22" fill="#ffffff" filter="url(#glow)" font-weight="bold">def create_future():</text>
+                    <text x="210" y="220" font-family="monospace" font-size="20" fill="#8be9fd">    print("Hello CodeNest!")</text>
+                    <text x="210" y="260" font-family="monospace" font-size="20" fill="#50fa7b">    learn(Python)</text>
+                    <text x="210" y="300" font-family="monospace" font-size="20" fill="#f1fa8c">    build(Projects)</text>
+                    <text x="210" y="340" font-family="monospace" font-size="20" fill="#ff79c6">    return Success</text>
+                    <text x="190" y="380" font-family="monospace" font-size="22" fill="#bd93f9" filter="url(#glow)">create_future() ✓</text>
+                    
+                    <!-- Monitor stand -->
+                    <rect x="350" y="460" width="100" height="20" rx="5" fill="#2d2d2d"/>
+                    <path d="M 320 480 L 480 480 L 460 495 L 340 495 Z" fill="#2d2d2d"/>
+                    
+                    <!-- Floating code symbols with glow -->
+                    <text x="80" y="300" font-size="60" fill="#667eea" opacity="0.4" filter="url(#glow)" font-weight="bold">&lt;/&gt;</text>
+                    <text x="680" y="250" font-size="50" fill="#38ef7d" opacity="0.4" filter="url(#glow)" font-weight="bold">{ }</text>
+                    <text x="100" y="500" font-size="45" fill="#f093fb" opacity="0.4" filter="url(#glow)" font-weight="bold">[ ]</text>
+                    
+                    <!-- Decorative lines -->
+                    <line x1="50" y1="100" x2="150" y2="120" stroke="#667eea" stroke-width="3" opacity="0.3"/>
+                    <line x1="650" y1="460" x2="750" y2="500" stroke="#38ef7d" stroke-width="3" opacity="0.3"/>
+                </svg>
+                <div class="floating-elements">
+                    <div class="floating-icon">🐍</div>
+                    <div class="floating-icon">⚡</div>
+                    <div class="floating-icon">💻</div>
+                    <div class="floating-icon">🚀</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="info">
+        <h2>CodeNest-ке қош келдіңіз</h2>
+        <p>CodeNest - те біз әркім кодтауды үйрене алады деп сенеміз. Біздің миссиямыз-жас саналарға цифрлық болашақты құруға, инновациялауға және қалыптастыруға мүмкіндік беретін қолжетімді, жоғары сапалы бағдарламалау білімін қамтамасыз ету. Біз студенттерге өз қарқынымен алға жылжуға, кәсіби басшылық алуға және мансап бойы оларға қызмет ететін нақты дағдыларды қалыптастыруға мүмкіндік беретін қолайлы оқу ортасын ұсынамыз.</p>
+    </section>
+
+    <section class="section">
+        <h2>Біз Кімге Қызмет Етеміз</h2>
+        <div class="audience-grid">
+            <div class="audience-card">
+                <h3>🎓</h3>
+                <h3>Студенттер</h3>
+                <p>Орта және жоғары сынып оқушылары бағдарламалаудың қызықты әлемін зерттеуге дайын</p>
+            </div>
+            <div class="audience-card">
+                <h3>🎯</h3>
+                <h3>Колледж студенттері</h3>
+                <p>Техникалық дағдылары мен мансаптық болашағын арттырғысы келетін университет студенттері</p>
+            </div>
+            <div class="audience-card">
+                <h3>💼</h3>
+                <h3>Ересек бастаушы</h3>
+                <p>Техникаға саяхатын бастайтын немесе мансапқа ауысатын кәсіпқойлар</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <h2>Біздің курстар</h2>
+        <div class="courses-grid">
+            <div class="course-card">
+                <div class="course-icon">🐍</div>
+                <h3>Python Programming</h3>
+                <p>Жаңадан бастаушылар мен кәсіпқойлар үшін ең әмбебап бағдарламалау тілін меңгеріңіз. Қарапайым сценарийлерден бастап күрделі қосымшаларға дейін бәрін құрастырыңыз.</p>
+            </div>
+            <div class="course-card">
+                <div class="course-icon">🗄️</div>
+                <h3>SQL Database</h3>
+                <p>SQL көмегімен дерекқорды басқаруды және деректерді басқаруды үйреніңіз. Кәсіби маман сияқты деректерді сұраңыз, талдаңыз және басқарыңыз.</p>
+            </div>
+            <div class="course-card">
+                <div class="course-icon">🌐</div>
+                <h3>Web Development</h3>
+                <p>HTML және CSS негіздерімен әдемі, жауап беретін веб-сайттар құрыңыз. Нөлден бастап керемет веб-тәжірибе жасаңыз.</p>
+            </div>
+            <div class="course-card">
+                <div class="course-icon">⚡</div>
+                <h3>JavaScript</h3>
+                <p>JavaScript көмегімен интерактивті, динамикалық веб-қосымшалар жасаңыз. Заманауи бағдарламалау арқылы веб-сайттарыңызды өмірге әкеліңіз.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <h2>Неліктен CodeNest таңдау керек?</h2>
+        <div class="advantages-list">
+            <div class="advantage-item">Сізге бағыт-бағдар беретін кәсіби нұсқаушылармен сенімді түрде өз бетінше оқу</div>
+            <div class="advantage-item">Нақты уақыттағы прогресті бақылау және егжей-тегжейлі талдау</div>
+            <div class="advantage-item">Курсты сәтті аяқтағаннан кейін берілетін сертификат</div>
+            <div class="advantage-item">Жеке оқу жоспары бойынша білім алу мүмкіндігі</div>
+            <div class="advantage-item">Мұғалімдеріңізді бағалаңыз және құнды кері байланыс беріңіз</div>
+            <div class="advantage-item">Интерактивті кодтау жаттығулары және нақты жобалар</div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <h3>Байланыс & Қолдау</h3>
+            <div class="contact-info">
+                <a href="tel:87777777777" class="contact-item">📞 8 (776) 517-45-03</a>
+                <a href="https://www.instagram.com/codenest_officiall" target="_blank" rel="noopener noreferrer" class="contact-item">💬 Instagram</a>
+                <a href="https://t.me/CN_consultant_bot" target="_blank" rel="noopener noreferrer" class="contact-item">🤖 Telegram-Бот Бойынша Кеңес Беру</a>
+            </div>
+            <div class="copyright">
+                © 2025 CodeNest. Барлық құқықтар қорғалған. Бағдарламашылардың келесі буынының мүмкіндіктерін кеңейту.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Auth Modal -->
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeAuthModal()">&times;</button>
+            <h2>CodeNest-ке қош келдіңіз</h2>
+            
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="switchTab('login')">Кіру</button>
+                <button class="auth-tab" onclick="switchTab('register')">Тіркелу</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form active" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="loginEmail">Электрондық пошта</label>
+                    <input type="email" id="loginEmail" placeholder="@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Пароль</label>
+                    <input type="password" id="loginPassword" placeholder="Парольді енгізіңіз" required>
+                </div>
+                <button type="submit" class="submit-btn">Кіру</button>
+                
+            </form>
+
+            <!-- Register Form -->
+            <form id="registerForm" class="auth-form" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label for="registerName">Толық Аты-Жөні</label>
+                    <input type="text" id="registerName" placeholder="" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerEmail">Электрондық пошта</label>
+                    <input type="email" id="registerEmail" placeholder="@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">Пароль</label>
+                    <input type="password" id="registerPassword" placeholder="Күшті пароль жасаңыз" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label for="registerConfirmPassword">Құпия сөзді растау</label>
+                    <input type="password" id="registerConfirmPassword" placeholder="Құпия сөзді растаңыз" required minlength="6">
+                </div>
+                <button type="submit" class="submit-btn">Тіркелу</button>
+            </form>
+        </div>
+    </div>
+{% load static %}
+    <script src="{% static 'scripts.js' %}" defer></script>
+
+</body>
+</html>
+    

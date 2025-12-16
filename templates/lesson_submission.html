@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeNest - Сабақты орындау</title>
+    
+    {% if user.is_authenticated %}
+    <meta name="user-email" content="{{ user.email }}">
+    <meta name="lesson-id" content="{{ lesson.id }}">
+    {% endif %}
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            background: 
+                radial-gradient(ellipse at top left, rgba(102, 126, 234, 0.4), transparent 50%),
+                radial-gradient(ellipse at top right, rgba(240, 147, 251, 0.4), transparent 50%),
+                radial-gradient(ellipse at bottom left, rgba(56, 239, 125, 0.4), transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(79, 172, 254, 0.4), transparent 50%),
+                linear-gradient(135deg, #667eea 0%, #764ba2 20%, #f093fb 40%, #4facfe 60%, #00f2fe 80%, #667eea 100%);
+            background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 400% 400%;
+            animation: gradientShift 20s ease infinite;
+            min-height: 100vh;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 50%; }
+            50% { background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 100% 50%; }
+            100% { background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 50%; }
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            padding: 1.2rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 900;
+            color: white;
+            text-shadow: 0 2px 10px rgba(102, 126, 234, 0.5);
+            cursor: pointer;
+        }
+
+        .logo::before {
+            content: '</>';
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-right: 0.5rem;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 0.8rem 1.8rem;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 100px auto 2rem;
+            padding: 0 5%;
+            display: flex;
+            gap: 2rem;
+        }
+
+        .main-panel {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            padding: 3rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        }
+
+        .lesson-header {
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 3px solid #e0e0e0;
+        }
+
+        .lesson-title {
+            font-size: 2.5rem;
+            color: #333;
+            font-weight: 900;
+            margin-bottom: 1rem;
+        }
+
+        .lesson-info {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .materials-section {
+            background: rgba(102, 126, 234, 0.05);
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-top: 1.5rem;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .materials-title {
+            font-size: 1.3rem;
+            color: #667eea;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .materials-text {
+            color: #333;
+            font-size: 1.05rem;
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+
+        .work-area {
+            margin-top: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            color: #333;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+        }
+
+        .editor-textarea {
+            width: 100%;
+            min-height: 300px;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 1.5rem;
+            font-size: 1.05rem;
+            font-family: 'Courier New', monospace;
+            color: #333;
+            resize: vertical;
+            background: #f8f9fa;
+        }
+
+        .editor-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .file-upload-area {
+            background: white;
+            border: 2px dashed #667eea;
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1.5rem;
+        }
+
+        .file-upload-area:hover {
+            background: rgba(102, 126, 234, 0.05);
+            border-color: #764ba2;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .upload-text {
+            color: #667eea;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .uploaded-files {
+            margin-top: 1.5rem;
+        }
+
+        .uploaded-file {
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.8rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .file-name {
+            font-size: 1rem;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .remove-file {
+            background: #f5576c;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .remove-file:hover {
+            background: #e04757;
+        }
+
+        .submit-section {
+            width: 200px;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            color: white;
+            padding: 1.5rem 2rem;
+            border: none;
+            border-radius: 25px;
+            font-weight: 700;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            position: sticky;
+            top: 120px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 35px rgba(56, 239, 125, 0.6);
+        }
+
+        .char-count {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 15px;
+            padding: 1rem;
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .char-count-label {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .char-count-value {
+            font-size: 1.5rem;
+            color: #667eea;
+            font-weight: 800;
+        }
+
+        @media (max-width: 968px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .submit-section {
+                width: 100%;
+            }
+
+            .submit-btn {
+                position: static;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">CodeNest</div>
+        <button class="back-btn" onclick="window.history.back()">← Сабақтарға қайту</button>
+    </nav>
+
+    <div class="container">
+        <div class="main-panel">
+            <div class="lesson-header">
+                <h1 class="lesson-title" id="lessonTitle">Сабақты жүктеу...</h1>
+                <div class="lesson-info" id="lessonInfo">Сабақ #1 • Мұғалім: ...</div>
+
+                <div class="materials-section" id="materialsSection" style="display: none;">
+                    <div class="materials-title">📚 Қосымша материалдар</div>
+                    <div class="materials-text" id="materialsText"></div>
+                </div>
+
+                <div class="materials-section" id="descriptionSection" style="display: none;">
+                    <div class="materials-title">📝 Сабақтың сипаттамасы</div>
+                    <div class="materials-text" id="descriptionText"></div>
+                </div>
+            </div>
+
+            <div class="work-area">
+                <h2 class="section-title">✏️ Сіздің шешіміңіз</h2>
+
+                <textarea 
+                    class="editor-textarea" 
+                    id="workText" 
+                    placeholder="Жауабыңызды осында жазыңыз, орындалған жұмысты сипаттаңыз...
+
+Мысалы:
+- Не үйрендіңіз
+- Қандай тапсырмаларды орындадыңыз
+- Қандай қиындықтарға тап болдыңыз
+- Қандай файлдарды қостыңыз"
+                    oninput="updateCharCount()"
+                ></textarea>
+
+                <div class="file-upload-area" onclick="document.getElementById('fileInput').click()">
+                    <div class="upload-icon">📎</div>
+                    <div class="upload-text">Файлдарды жүктеу үшін басыңыз</div>
+                    <small style="color: #999; display: block; margin-top: 0.5rem;">
+                        Қолдау көрсетіледі: .py, .txt, .pdf, .zip, .jpg, .png
+                    </small>
+                </div>
+                <input 
+                    type="file" 
+                    id="fileInput" 
+                    class="file-input" 
+                    multiple 
+                    accept=".py,.txt,.pdf,.zip,.jpg,.png"
+                    onchange="handleFiles(this.files)"
+                >
+
+                <div class="uploaded-files" id="uploadedFiles"></div>
+            </div>
+        </div>
+
+        <div class="submit-section">
+            <button class="submit-btn" onclick="submitAssignment()">
+                📤 Жіберу
+            </button>
+            <div class="char-count">
+                <div class="char-count-label">Таңбалар</div>
+                <div class="char-count-value" id="charCount">0</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let uploadedFiles = [];
+        let currentLessonId = null;
+
+        function getCSRFToken() {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    let cookie = cookies[i].trim();
+                    if (cookie.startsWith('csrftoken=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(10));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        async function loadLessonInfo() {
+            const urlParams = new URLSearchParams(window.location.search);
+            currentLessonId = urlParams.get('lesson_id');
+            
+            if (!currentLessonId) {
+                alert('❌ Қате: сабақ ID көрсетілмеген');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/student/lesson/${currentLessonId}/`);
+                const lesson = await response.json();
+
+                document.getElementById('lessonTitle').textContent = lesson.title;
+                document.getElementById('lessonInfo').textContent = 
+                    `Сабақ #${lesson.lesson_number} • Мұғалім: ${lesson.teacher_name} • ${lesson.published_date}`;
+
+                if (lesson.materials) {
+                    document.getElementById('materialsSection').style.display = 'block';
+                    document.getElementById('materialsText').textContent = lesson.materials;
+                }
+
+                if (lesson.description) {
+                    document.getElementById('descriptionSection').style.display = 'block';
+                    document.getElementById('descriptionText').textContent = lesson.description;
+                }
+
+            } catch (error) {
+                console.error('Сабақты жүктеу қатесі:', error);
+                alert('❌ Сабақ туралы ақпаратты жүктеу қатесі');
+            }
+        }
+
+        function updateCharCount() {
+            const text = document.getElementById('workText').value;
+            document.getElementById('charCount').textContent = text.length;
+        }
+
+        function handleFiles(files) {
+            const container = document.getElementById('uploadedFiles');
+            
+            Array.from(files).forEach(file => {
+                uploadedFiles.push(file);
+                
+                const fileElement = document.createElement('div');
+                fileElement.className = 'uploaded-file';
+                fileElement.innerHTML = `
+                    <span class="file-name">📄 ${file.name}</span>
+                    <button class="remove-file" onclick="removeFile('${file.name}', this)">Жою</button>
+                `;
+                
+                container.appendChild(fileElement);
+            });
+        }
+
+        function removeFile(filename, button) {
+            uploadedFiles = uploadedFiles.filter(f => f.name !== filename);
+            button.closest('.uploaded-file').remove();
+        }
+
+        async function submitAssignment() {
+            const text = document.getElementById('workText').value;
+            
+            if (text.trim() === '' && uploadedFiles.length === 0) {
+                alert('⚠️ Жібермес бұрын мәтін қосыңыз немесе файлдарды жүктеңіз!');
+                return;
+            }
+
+            if (!currentLessonId) {
+                alert('❌ Қате: сабақ ID анықталмаған');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('lesson_id', currentLessonId);
+            formData.append('submission_text', text);
+            
+            uploadedFiles.forEach(file => {
+                formData.append('files', file);
+            });
+
+            try {
+                const response = await fetch('/api/student/submit-assignment/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(`✅ Тапсырма сәтті жіберілді!\n\nМұғалім тапсырманы тексеру үшін алады.`);
+                    
+                    document.getElementById('workText').value = '';
+                    document.getElementById('uploadedFiles').innerHTML = '';
+                    uploadedFiles = [];
+                    updateCharCount();
+                    
+                    setTimeout(() => {
+                        window.location.href = '/profile/';
+                    }, 1500);
+                } else {
+                    alert('❌ Жіберу қатесі: ' + result.message);
+                }
+
+            } catch (error) {
+                console.error('Жіберу қатесі:', error);
+                alert('❌ Тапсырманы жіберу кезінде қате пайда болды');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadLessonInfo);
+    </script>
+</body>
+</html>
